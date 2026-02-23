@@ -17,6 +17,10 @@ public class TemporaryAssignment extends AbstractRoleAssignment{
         this.expiresAt = newExpirationDate;
     }
 
+    public String getExpiresAt() {
+        return expiresAt;
+    }
+
     public boolean isExpired() {
         LocalDateTime expiresAt = LocalDateTime.parse(this.expiresAt);
 
