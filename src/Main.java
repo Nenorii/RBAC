@@ -1,13 +1,30 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 void main() {
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how OpenIDE suggests fixing it.
-    IO.println("Hello and welcome!");
+        User user1 = new User("username", "full name", "email@gmail.com");
+        User user2 = new User("operator", "full name", "email@gmail.com");
 
-    for (int i = 1; i <= 5; i++) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        IO.println("i = " + i);
-    }
+        Role role = new Role("admin", "admin permissions");
+
+        Permission read = new Permission("READ", "users", "Can read users");
+        Permission write = new Permission("WRITE", "reports", "Can write reports");
+        Permission delete = new Permission("DELETE", "settings", "Can delete users");
+
+        role.addPermission(read);
+        role.addPermission(write);
+        role.addPermission(delete);
+
+        AssignmentMetadata am = AssignmentMetadata.now(user2.username(), "with some reason");
+
+        PermanentAssignment pa = new PermanentAssignment(user1, role, am);
+        System.out.println(pa.summary());
+
+        pa.revoke();
+        System.out.println(pa.summary());
+
+        TemporaryAssignment ta = new TemporaryAssignment(user1, role, am);
+
+        ta.extend(LocalDate.parse("2035-09-20").atStartOfDay().toString());
+        System.out.println(ta.summary());
+
+        ta.extend(LocalDate.parse("2005-09-20").atStartOfDay().toString());
+        System.out.println(ta.summary());
 }
