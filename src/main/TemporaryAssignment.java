@@ -6,7 +6,7 @@ public class TemporaryAssignment extends AbstractRoleAssignment{
     private String expiresAt = "";
     private boolean autoRenew = false;
 
-    public TemporaryAssignment(User user, Role role, AssignmentMetadata assignmentMetadata) {
+    public TemporaryAssignment(User user, Role role, AssignmentMetadata assignmentMetadata, String date) {
         super(user, role, assignmentMetadata);
     }
 

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/RBAC.iml" filepath="$PROJECT_DIR$/.idea/RBAC.iml" />
+      <module fileurl="file://$PROJECT_DIR$/rbac.iml" filepath="$PROJECT_DIR$/rbac.iml" />
     </modules>
   </component>
 </project>
