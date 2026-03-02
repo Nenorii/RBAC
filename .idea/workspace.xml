@@ -5,36 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f22e08b6-208e-4295-82fa-fa1f4cd53b66" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/RBAC.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rbac.iml" beforeDir="false" afterPath="$PROJECT_DIR$/rbac.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AbstractRoleAssignment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AssignmentFilter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AssignmentFilters.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AssignmentManager.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AssignmentMetadata.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AssignmentSorters.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PermanentAssignment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Permission.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Repository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Role.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RoleAssignment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RoleFilter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RoleFilters.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RoleManager.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RoleSorters.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/TemporaryAssignment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/User.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/UserFilter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/UserFilters.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/UserManager.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/UserSorters.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +43,9 @@
       </MavenGeneralSettings>
     </option>
   </component>
+  <component name="MavenRunner">
+    <option name="delegateBuildToMaven" value="true" />
+  </component>
   <component name="OpenIdeProjectLocalState">
     <option name="firstOpen" value="false" />
   </component>
@@ -89,6 +63,7 @@
     "Application.Main.executor": "Run",
     "JUnit.AssignmentManagerTest.executor": "Run",
     "JUnit.UserManagerTest.executor": "Run",
+    "Maven.rbac [install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
@@ -97,10 +72,10 @@
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/Sasha/OneDrive/Рабочий стол/Project/RBAC",
-    "project.structure.last.edited": "Modules",
+    "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "MavenSettings"
+    "settings.editor.selected.configurable": "reference.settings.project.maven.runner"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -108,7 +83,7 @@
       <recent name="C:\Users\Sasha\OneDrive\Рабочий стол\Project\RBAC" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Main">
+  <component name="RunManager" selected="JUnit.AssignmentManagerTest">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Main" />
       <module name="rbac" />
@@ -134,21 +109,10 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="RBAC" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="RBAC" />
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.AssignmentManagerTest" />
+        <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.UserManagerTest" />
       </list>
     </recent_temporary>
@@ -162,5 +126,16 @@
       <updated>1772380747138</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
