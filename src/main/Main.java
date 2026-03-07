@@ -1,10 +1,25 @@
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Scanner;
 
 class Main {
+
     public static void main(String[] args) {
+        RBACSystem system = new RBACSystem();
+        system.initialize();
+
+        CommandParser parser = new CommandParser();
+        CommandRegistry.registerAllCommands(parser);
+
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("RBAC консоль. Введите 'help' для списка команд, 'exit' для выхода.");
+            while (true) {
+                System.out.print("> ");
+                String input = scanner.nextLine();
+                parser.parseAndExecute(input, scanner, system);
+            }
+        }
+    }
+
+    static void demoPart1And2() {
         System.out.println("1.1 Users");
         User u1 = User.create("username", "Full Name", "email@gmail.com");
         User u2 = User.create("operator", "Operator Name", "operator@company.com");
@@ -33,8 +48,12 @@ class Main {
         System.out.println("After revoke: revoked=" + pa.isRevoked() + ", active=" + pa.isActive());
 
         System.out.println("\n1.5 Temporary assignment");
-        TemporaryAssignment ta = new TemporaryAssignment(u1, adminRole, meta,
-                LocalDate.parse("2030-01-01").atStartOfDay().toString());
+        TemporaryAssignment ta = new TemporaryAssignment(
+                u1,
+                adminRole,
+                meta,
+                java.time.LocalDate.parse("2030-01-01").atStartOfDay().toString()
+        );
         System.out.println(ta.summary());
         ta.extend("2035-09-20");
         System.out.println("After extend(2035): " + ta.summary());
@@ -46,7 +65,7 @@ class Main {
 
     static void demoFiltersAndSorters() {
         System.out.println("\n2.1 User filters");
-        var users = List.of(
+        var users = java.util.List.of(
                 User.create("username", "User One", "user@company.com"),
                 User.create("operator", "Operator", "operator@company.com"),
                 User.create("tester", "Test User", "test@gmail.com"),
@@ -64,7 +83,7 @@ class Main {
         var adminRole = new Role("ADMIN", "");
         adminRole.addPermission(perm);
         var userRole = new Role("USER", "");
-        var roles = List.of(adminRole, userRole);
+        var roles = java.util.List.of(adminRole, userRole);
 
         var powerfulFilter = RoleFilters.hasAtLeastNPermissions(1);
         roles.stream()
@@ -74,7 +93,7 @@ class Main {
 
         System.out.println("\n2.3 Assignment filters");
         var meta = AssignmentMetadata.now("admin", "test");
-        var assignments = List.<RoleAssignment>of(
+        var assignments = java.util.List.<RoleAssignment>of(
                 new PermanentAssignment(users.get(0), adminRole, meta),
                 new PermanentAssignment(users.get(3), adminRole, meta)
         );
