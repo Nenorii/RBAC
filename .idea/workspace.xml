@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f22e08b6-208e-4295-82fa-fa1f4cd53b66" name="Changes" comment="Update">
+    <list default="true" id="f22e08b6-208e-4295-82fa-fa1f4cd53b66" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -66,12 +66,14 @@
     "Application.Main.executor": "Run",
     "JUnit.AssignmentManagerTest.executor": "Run",
     "JUnit.UserManagerTest.executor": "Run",
+    "Maven.Main.executor": "Run",
+    "Maven.rbac [install,--non-recursive].executor": "Run",
     "Maven.rbac [install].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "feature/managers",
+    "git-widget-placeholder": "feature/commands",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/Sasha/OneDrive/Рабочий стол/Project/RBAC",
