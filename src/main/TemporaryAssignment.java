@@ -2,18 +2,27 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 
-public class TemporaryAssignment extends AbstractRoleAssignment{
+public class TemporaryAssignment extends AbstractRoleAssignment {
     private String expiresAt = "";
-    private boolean autoRenew = false;
 
     public TemporaryAssignment(User user, Role role, AssignmentMetadata assignmentMetadata, String date) {
         super(user, role, assignmentMetadata);
+        if (date == null || date.trim().isEmpty()) {
+            throw new IllegalArgumentException("Дата окончания обязательна для временного назначения");
+        }
+        if (!DateUtils.isFutureDate(date)) {
+            throw new IllegalArgumentException("Дата окончания должна быть в будущем");
+        }
+        this.expiresAt = date;
     }
 
     public void extend(String newExpirationDate) {
-        if (newExpirationDate == null || newExpirationDate.isEmpty())
-            throw new IllegalArgumentException("Specify the correct new date!");
-
+        if (newExpirationDate == null || newExpirationDate.trim().isEmpty()) {
+            throw new IllegalArgumentException("Укажите корректную новую дату!");
+        }
+        if (!DateUtils.isFutureDate(newExpirationDate)) {
+            throw new IllegalArgumentException("Новая дата должна быть в будущем");
+        }
         this.expiresAt = newExpirationDate;
     }
 
@@ -22,57 +31,45 @@ public class TemporaryAssignment extends AbstractRoleAssignment{
     }
 
     public boolean isExpired() {
-        LocalDateTime expiresAt = LocalDateTime.parse(this.expiresAt);
-
-        return expiresAt.isBefore(LocalDateTime.now());
+        return DateUtils.isExpired(expiresAt);
     }
 
     public String getTimeRemaining() {
-        if (expiresAt == null || expiresAt.isEmpty()) {
+        if (expiresAt.isEmpty()) {
             return "Never expires";
         }
 
         try {
-            LocalDateTime expirationDate = LocalDateTime.parse(expiresAt);
+            LocalDateTime expirationDate = DateUtils.parseExpiry(expiresAt);
             LocalDateTime now = LocalDateTime.now();
 
             if (expirationDate.isBefore(now)) {
-                return "Expired";
+                return "Истёкло";
+            }
+
+            long days = DateUtils.daysUntil(expiresAt);
+            if (days > 0) {
+                return days + " дней осталось";
             }
 
             Duration duration = Duration.between(now, expirationDate);
-
-            long days = duration.toDays();
             long hours = duration.toHoursPart();
             long minutes = duration.toMinutesPart();
-            long seconds = duration.toSecondsPart();
 
-            if (days > 0) {
-                return String.format("%d day%s %d hour%s %d minute%s",
-                        days, days > 1 ? "s" : "",
-                        hours, hours > 1 ? "s" : "",
-                        minutes, minutes > 1 ? "s" : "");
-            } else if (hours > 0) {
-                return String.format("%d hour%s %d minute%s",
-                        hours, hours > 1 ? "s" : "",
-                        minutes, minutes > 1 ? "s" : "");
-            } else if (minutes > 0) {
-                return String.format("%d minute%s %d second%s",
-                        minutes, minutes > 1 ? "s" : "",
-                        seconds, seconds > 1 ? "s" : "");
+            if (hours > 0) {
+                return String.format("%d ч %d мин", hours, minutes);
             } else {
-                return String.format("%d second%s",
-                        seconds, seconds > 1 ? "s" : "");
+                return String.format("%d мин", minutes);
             }
 
         } catch (DateTimeParseException e) {
-            return "Invalid date format";
+            return "Неверный формат даты";
         }
     }
 
     @Override
     public boolean isActive() {
-        return !this.isExpired();
+        return !isExpired();
     }
 
     @Override
@@ -82,8 +79,10 @@ public class TemporaryAssignment extends AbstractRoleAssignment{
 
     @Override
     public String summary() {
-        String summary = super.summary();
+        String baseSummary = super.summary();  // базовая часть из родителя
 
-        return summary + String.format("\nExpires at: %s", this.expiresAt);
+        return baseSummary + String.format(" [TEMPORARY, до %s, %s]",
+                DateUtils.format(expiresAt),
+                isActive() ? "активно" : "истекло");
     }
 }

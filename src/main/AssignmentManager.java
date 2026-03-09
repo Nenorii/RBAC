@@ -107,4 +107,18 @@ final class AssignmentManager implements Repository<RoleAssignment> {
             throw new IllegalArgumentException("Назначение '" + assignmentId + "' не временное");
         ta.extend(newExpirationDate);
     }
+
+    public void extendTemporaryAssignment(String assignmentId, int days) {
+        var assignmentOpt = findById(assignmentId);
+        var assignment = assignmentOpt.orElseThrow(() ->
+                new IllegalArgumentException("Назначение '" + assignmentId + "' не найдено"));
+
+        if (!(assignment instanceof TemporaryAssignment temp)) {
+            throw new IllegalArgumentException("Только временные назначения можно продлить");
+        }
+
+        String currentExpiry = temp.getExpiresAt();
+        String newExpiry = DateUtils.extend(currentExpiry, days);
+        temp.extend(newExpiry);
+    }
 }

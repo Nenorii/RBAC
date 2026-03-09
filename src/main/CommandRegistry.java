@@ -530,21 +530,22 @@ class CommandRegistry {
 
         parser.registerCommand("assignment-extend", "Продлить временное назначение", (scanner, system) -> {
             String id = ConsoleUtils.promptString(scanner, "Assignment ID", true);
-            String newDate = ConsoleUtils.promptString(scanner, "Новая дата окончания (yyyy-MM-dd HH:mm)", true);
+            int days = ConsoleUtils.promptInt(scanner, "Дней продлить", 1, 365);
             try {
-                system.getAssignmentManager().extendTemporaryAssignment(id, newDate);
-                System.out.println("Назначение продлено до " + newDate);
+                system.getAssignmentManager().extendTemporaryAssignment(id, days);
+                System.out.println("Назначение продлено на " + days + " дней");
 
                 system.getAuditLog().log(
                         "ASSIGNMENT_EXTEND",
                         system.getCurrentUser(),
                         id,
-                        "newExpiry=" + newDate
+                        "days=" + days
                 );
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
         });
+
 
         parser.registerCommand("assignment-search", "Поиск назначений по фильтрам", (scanner, system) -> {
             System.out.println("Фильтры:");

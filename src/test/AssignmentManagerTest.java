@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,11 +83,16 @@ class AssignmentManagerTest {
 
     @Test
     void extendTemporaryAssignment() {
-        var ta = new TemporaryAssignment(user, role, meta, "2025-01-01");
+        var ta = new TemporaryAssignment(user, role, meta, "2027-01-01 23:59");
         assignmentManager.add(ta);
-        assignmentManager.extendTemporaryAssignment(ta.assignmentId(), "2030-12-31");
-        assertEquals("2030-12-31", ta.getExpiresAt());
+        assignmentManager.extendTemporaryAssignment(ta.assignmentId(), 365);
+        String newExpiry = ta.getExpiresAt();
+        LocalDateTime newDateTime = DateUtils.parseExpiry(newExpiry);
+        assertTrue(newDateTime.getYear() >= 2028);
     }
+
+
+
 
     @Test
     void getActiveAssignments() {
