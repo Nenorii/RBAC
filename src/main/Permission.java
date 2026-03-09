@@ -4,21 +4,23 @@ public record Permission(String name, String resource, String description) {
 
     public Permission(String name, String resource, String description) {
 
-        if (name == null || name.isBlank())
-            throw new IllegalArgumentException("Название права не может быть пустым");
-        if (resource == null || resource.isBlank())
-            throw new IllegalArgumentException("Ресурс не может быть пустым");
-        if (description == null || description.isBlank())
-            throw new IllegalArgumentException("Описание не должно быть пустым");
+        ValidationUtils.requireNonEmpty(name, "permission name");
+        ValidationUtils.requireNonEmpty(resource, "resource");
+        ValidationUtils.requireNonEmpty(description, "description");
 
         if (name.contains(" ")) {
             throw new IllegalArgumentException("Название права не должно содержать пробелы");
         }
 
-        this.name = name.toUpperCase(Locale.ROOT);
-        this.resource = resource.toLowerCase(Locale.ROOT);
-        this.description = description.trim();
+        String normalizedName = ValidationUtils.normalizeString(name).toUpperCase(Locale.ROOT);
+        String normalizedResource = ValidationUtils.normalizeString(resource).toLowerCase(Locale.ROOT);
+        String normalizedDescription = ValidationUtils.normalizeString(description);
+
+        this.name = normalizedName;
+        this.resource = normalizedResource;
+        this.description = normalizedDescription;
     }
+
 
     public String format() {
         return String.format("%s on %s: %s", name, resource, description);
