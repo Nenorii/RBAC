@@ -4,6 +4,7 @@ final class RBACSystem {
     private final RoleManager roleManager;
     private final AssignmentManager assignmentManager;
     private final AuditLog auditLog;
+    private final ReportGenerator reportGenerator;
     private String currentUser;
 
     RBACSystem() {
@@ -11,6 +12,7 @@ final class RBACSystem {
         this.roleManager = new RoleManager();
         this.assignmentManager = new AssignmentManager(userManager, roleManager);
         this.auditLog = new AuditLog();
+        this.reportGenerator = new ReportGenerator();
         roleManager.setRemoveGuard(role ->
                 !assignmentManager.findByRole(role).isEmpty()
         );
@@ -30,6 +32,10 @@ final class RBACSystem {
 
     AuditLog getAuditLog() {
         return auditLog;
+    }
+
+    ReportGenerator getReportGenerator() {
+        return reportGenerator;
     }
 
     void setCurrentUser(String username) {

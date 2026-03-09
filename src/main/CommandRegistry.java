@@ -10,6 +10,7 @@ class CommandRegistry {
         registerPermissionCommands(parser);
         registerServiceCommands(parser);
         registerAuditCommands(parser);
+        registerReportCommands(parser);
     }
 
     private static void registerUserCommands(CommandParser parser) {
@@ -767,4 +768,67 @@ class CommandRegistry {
             }
         });
     }
+
+    private static void registerReportCommands(CommandParser parser) {
+        parser.registerCommand("report-users", "Отчёт по пользователям",
+                (scanner, system) -> {
+                    String report = system.getReportGenerator()
+                            .generateUserReport(system.getUserManager(), system.getAssignmentManager());
+                    System.out.println(report);
+
+                    System.out.print("Сохранить отчёт в файл? (да/нет): ");
+                    String ans = scanner.nextLine().trim();
+                    if ("да".equalsIgnoreCase(ans)) {
+                        System.out.print("Имя файла: ");
+                        String filename = scanner.nextLine().trim();
+                        try {
+                            system.getReportGenerator().exportToFile(report, filename);
+                            System.out.println("Отчёт сохранён в " + filename);
+                        } catch (Exception e) {
+                            System.out.println("Ошибка сохранения: " + e.getMessage());
+                        }
+                    }
+                });
+
+        parser.registerCommand("report-roles", "Отчёт по ролям",
+                (scanner, system) -> {
+                    String report = system.getReportGenerator()
+                            .generateRoleReport(system.getRoleManager(), system.getAssignmentManager());
+                    System.out.println(report);
+
+                    System.out.print("Сохранить отчёт в файл? (да/нет): ");
+                    String ans = scanner.nextLine().trim();
+                    if ("да".equalsIgnoreCase(ans)) {
+                        System.out.print("Имя файла: ");
+                        String filename = scanner.nextLine().trim();
+                        try {
+                            system.getReportGenerator().exportToFile(report, filename);
+                            System.out.println("Отчёт сохранён в " + filename);
+                        } catch (Exception e) {
+                            System.out.println("Ошибка сохранения: " + e.getMessage());
+                        }
+                    }
+                });
+
+        parser.registerCommand("report-matrix", "Матрица прав (пользователь × ресурс)",
+                (scanner, system) -> {
+                    String report = system.getReportGenerator()
+                            .generatePermissionMatrix(system.getUserManager(), system.getAssignmentManager());
+                    System.out.println(report);
+
+                    System.out.print("Сохранить отчёт в файл? (да/нет): ");
+                    String ans = scanner.nextLine().trim();
+                    if ("да".equalsIgnoreCase(ans)) {
+                        System.out.print("Имя файла: ");
+                        String filename = scanner.nextLine().trim();
+                        try {
+                            system.getReportGenerator().exportToFile(report, filename);
+                            System.out.println("Отчёт сохранён в " + filename);
+                        } catch (Exception e) {
+                            System.out.println("Ошибка сохранения: " + e.getMessage());
+                        }
+                    }
+                });
+    }
+
 }
