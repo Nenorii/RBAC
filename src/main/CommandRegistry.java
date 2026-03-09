@@ -21,14 +21,19 @@ class CommandRegistry {
                 System.out.println("Пользователей нет.");
                 return;
             }
-            System.out.println("\n=== Список пользователей ===");
-            System.out.printf("%-20s %-30s %-30s%n", "Username", "Полное имя", "Email");
-            System.out.println("-".repeat(80));
-            for (User u : users) {
-                System.out.printf("%-20s %-30s %-30s%n", u.username(), u.fullName(), u.email());
-            }
-            System.out.println();
+
+            String[] headers = {"Username", "Полное имя", "Email"};
+            List<String[]> rows = users.stream()
+                    .map(u -> new String[]{
+                            u.username(),
+                            FormatUtils.truncate(u.fullName(), 30),
+                            FormatUtils.truncate(u.email(), 30)
+                    })
+                    .toList();
+
+            System.out.println(FormatUtils.formatTable(headers, rows));
         });
+
 
         parser.registerCommand("user-create", "Создать нового пользователя", (scanner, system) -> {
             String username = ConsoleUtils.promptString(scanner, "Username", true);
@@ -175,14 +180,19 @@ class CommandRegistry {
                 System.out.println("Ролей нет.");
                 return;
             }
-            System.out.println("\n=== Список ролей ===");
-            System.out.printf("%-20s %-10s %-40s%n", "Название", "Прав", "ID");
-            System.out.println("-".repeat(70));
-            for (Role r : roles) {
-                System.out.printf("%-20s %-10d %-40s%n", r.getName(), r.getPermissions().size(), r.getId());
-            }
-            System.out.println();
+
+            String[] headers = {"Название", "Прав", "ID"};
+            List<String[]> rows = roles.stream()
+                    .map(r -> new String[]{
+                            FormatUtils.truncate(r.getName(), 20),
+                            String.valueOf(r.getPermissions().size()),
+                            r.getId()
+                    })
+                    .toList();
+
+            System.out.println(FormatUtils.formatTable(headers, rows));
         });
+
 
         parser.registerCommand("role-create", "Создать новую роль", (scanner, system) -> {
             String name = ConsoleUtils.promptString(scanner, "Название роли", true);
@@ -436,17 +446,21 @@ class CommandRegistry {
                 System.out.println("Назначений нет.");
                 return;
             }
-            System.out.println("\n=== Список назначений ===");
-            System.out.printf("%-20s %-20s %-12s %-10s %-30s%n",
-                    "Username", "Роль", "Тип", "Статус", "Назначено");
-            System.out.println("-".repeat(95));
-            for (RoleAssignment a : all) {
-                System.out.printf("%-20s %-20s %-12s %-10s %-30s%n",
-                        a.user().username(), a.role().getName(), a.assignmentType(),
-                        a.isActive() ? "ACTIVE" : "INACTIVE", a.metadata().assignedAt());
-            }
-            System.out.println();
+
+            String[] headers = {"Username", "Роль", "Тип", "Статус", "Назначено"};
+            List<String[]> rows = all.stream()
+                    .map(a -> new String[]{
+                            FormatUtils.truncate(a.user().username(), 20),
+                            FormatUtils.truncate(a.role().getName(), 20),
+                            a.assignmentType(),
+                            a.isActive() ? "ACTIVE" : "INACTIVE",
+                            FormatUtils.truncate(a.metadata().assignedAt(), 30)
+                    })
+                    .toList();
+
+            System.out.println(FormatUtils.formatTable(headers, rows));
         });
+
 
         parser.registerCommand("assignment-list-user", "Назначения конкретного пользователя", (scanner, system) -> {
             String username = ConsoleUtils.promptString(scanner, "Username", true);
@@ -586,20 +600,28 @@ class CommandRegistry {
             var permissions = system.getAssignmentManager().getUserPermissions(user.get());
             if (permissions.isEmpty()) {
                 System.out.println("У пользователя нет прав.");
-            } else {
-                var grouped = new java.util.TreeMap<String, java.util.List<Permission>>();
-                for (Permission p : permissions) {
-                    grouped.computeIfAbsent(p.resource(), k -> new java.util.ArrayList<>()).add(p);
-                }
-                System.out.println("Права пользователя " + username + " (" + permissions.size() + "):");
-                for (var entry : grouped.entrySet()) {
-                    System.out.println("  Ресурс: " + entry.getKey());
-                    for (Permission p : entry.getValue()) {
-                        System.out.println("    - " + p.name() + ": " + p.description());
-                    }
-                }
+                return;
+            }
+
+            var grouped = new java.util.TreeMap<String, java.util.List<Permission>>();
+            for (Permission p : permissions) {
+                grouped.computeIfAbsent(p.resource(), k -> new java.util.ArrayList<>()).add(p);
+            }
+
+            System.out.println(FormatUtils.formatHeader("Права пользователя " + username + " (" + permissions.size() + ")"));
+            for (var entry : grouped.entrySet()) {
+                String[] headers = {"Право", "Описание"};
+                List<String[]> rows = entry.getValue().stream()
+                        .map(p -> new String[]{
+                                p.name(),
+                                FormatUtils.truncate(p.description(), 40)
+                        })
+                        .toList();
+                System.out.println(FormatUtils.formatBox("Ресурс: " + entry.getKey()));
+                System.out.println(FormatUtils.formatTable(headers, rows));
             }
         });
+
 
         parser.registerCommand("permissions-check", "Проверить право пользователя", (scanner, system) -> {
             String username = ConsoleUtils.promptString(scanner, "Username", true);
