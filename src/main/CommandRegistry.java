@@ -1,6 +1,5 @@
 import java.util.List;
 import java.util.Scanner;
-import java.util.Comparator;
 
 class CommandRegistry {
 
@@ -10,6 +9,7 @@ class CommandRegistry {
         registerAssignmentCommands(parser);
         registerPermissionCommands(parser);
         registerServiceCommands(parser);
+        registerAuditCommands(parser);
     }
 
     private static void registerUserCommands(CommandParser parser) {
@@ -39,6 +39,13 @@ class CommandRegistry {
                 User user = User.create(username, fullName, email);
                 system.getUserManager().add(user);
                 System.out.println("Пользователь создан: " + user.format());
+
+                system.getAuditLog().log(
+                        "USER_CREATE",
+                        system.getCurrentUser(),
+                        user.username(),
+                        "fullName=" + user.fullName() + ", email=" + user.email()
+                );
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
@@ -59,7 +66,8 @@ class CommandRegistry {
             } else {
                 System.out.println("Роли:");
                 for (var a : assignments) {
-                    System.out.println("  - " + a.role().getName() + " [" + a.assignmentType() + ", " + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
+                    System.out.println("  - " + a.role().getName() + " [" + a.assignmentType()
+                            + ", " + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
                 }
             }
             var permissions = system.getAssignmentManager().getUserPermissions(user.get());
@@ -84,6 +92,13 @@ class CommandRegistry {
             try {
                 system.getUserManager().update(username, fullName, email);
                 System.out.println("Данные обновлены.");
+
+                system.getAuditLog().log(
+                        "USER_UPDATE",
+                        system.getCurrentUser(),
+                        username,
+                        "newFullName=" + fullName + ", newEmail=" + email
+                );
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
@@ -109,6 +124,13 @@ class CommandRegistry {
             }
             system.getUserManager().remove(user.get());
             System.out.println("Пользователь удалён.");
+
+            system.getAuditLog().log(
+                    "USER_DELETE",
+                    system.getCurrentUser(),
+                    username,
+                    "Пользователь и все назначения удалены"
+            );
         });
 
         parser.registerCommand("user-search", "Поиск пользователей по фильтрам", (scanner, system) -> {
@@ -183,6 +205,14 @@ class CommandRegistry {
                 Role role = new Role(name, desc);
                 system.getRoleManager().add(role);
                 System.out.println("Роль создана: " + role.getName() + " [" + role.getId() + "]");
+
+                system.getAuditLog().log(
+                        "ROLE_CREATE",
+                        system.getCurrentUser(),
+                        role.getName(),
+                        "id=" + role.getId()
+                );
+
                 System.out.print("Добавить права? (да/нет): ");
                 if ("да".equalsIgnoreCase(scanner.nextLine().trim())) {
                     while (true) {
@@ -196,6 +226,13 @@ class CommandRegistry {
                         Permission p = new Permission(pName, resource, pDesc);
                         role.addPermission(p);
                         System.out.println("Право добавлено.");
+
+                        system.getAuditLog().log(
+                                "ROLE_ADD_PERMISSION",
+                                system.getCurrentUser(),
+                                role.getName(),
+                                "permission=" + p.format()
+                        );
                     }
                 }
             } catch (Exception e) {
@@ -237,6 +274,13 @@ class CommandRegistry {
             try {
                 system.getRoleManager().remove(role.get());
                 System.out.println("Роль удалена.");
+
+                system.getAuditLog().log(
+                        "ROLE_DELETE",
+                        system.getCurrentUser(),
+                        name,
+                        "Роль удалена"
+                );
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
@@ -255,6 +299,13 @@ class CommandRegistry {
                 Permission p = new Permission(pName, resource, desc);
                 system.getRoleManager().addPermissionToRole(roleName, p);
                 System.out.println("Право добавлено к роли.");
+
+                system.getAuditLog().log(
+                        "ROLE_ADD_PERMISSION",
+                        system.getCurrentUser(),
+                        roleName,
+                        "permission=" + p.format()
+                );
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
@@ -290,8 +341,16 @@ class CommandRegistry {
                 System.out.println("Неверный номер.");
                 return;
             }
-            system.getRoleManager().removePermissionFromRole(roleName, perms.get(idx));
+            Permission perm = perms.get(idx);
+            system.getRoleManager().removePermissionFromRole(roleName, perm);
             System.out.println("Право удалено.");
+
+            system.getAuditLog().log(
+                    "ROLE_REMOVE_PERMISSION",
+                    system.getCurrentUser(),
+                    roleName,
+                    "permission=" + perm.format()
+            );
         });
 
         parser.registerCommand("role-search", "Поиск ролей", (scanner, system) -> {
@@ -386,12 +445,26 @@ class CommandRegistry {
                     PermanentAssignment pa = new PermanentAssignment(user.get(), role, meta);
                     system.getAssignmentManager().add(pa);
                     System.out.println("Роль назначена (постоянно).");
+
+                    system.getAuditLog().log(
+                            "ROLE_ASSIGN",
+                            system.getCurrentUser(),
+                            user.get().username(),
+                            "role=" + role.getName() + ", type=PERMANENT"
+                    );
                 } else if ("2".equals(type)) {
                     System.out.print("Дата окончания (yyyy-MM-dd HH:mm): ");
                     String expiresAt = scanner.nextLine().trim();
                     TemporaryAssignment ta = new TemporaryAssignment(user.get(), role, meta, expiresAt);
                     system.getAssignmentManager().add(ta);
                     System.out.println("Роль назначена (временно до " + expiresAt + ").");
+
+                    system.getAuditLog().log(
+                            "ROLE_ASSIGN",
+                            system.getCurrentUser(),
+                            user.get().username(),
+                            "role=" + role.getName() + ", type=TEMPORARY, until=" + expiresAt
+                    );
                 } else {
                     System.out.println("Неверный тип.");
                 }
@@ -432,9 +505,17 @@ class CommandRegistry {
                 System.out.println("Неверный номер.");
                 return;
             }
+            RoleAssignment a = assignments.get(idx);
             try {
-                system.getAssignmentManager().revokeAssignment(assignments.get(idx).assignmentId());
+                system.getAssignmentManager().revokeAssignment(a.assignmentId());
                 System.out.println("Назначение отозвано.");
+
+                system.getAuditLog().log(
+                        "ROLE_REVOKE",
+                        system.getCurrentUser(),
+                        user.get().username(),
+                        "role=" + a.role().getName() + ", type=" + a.assignmentType()
+                );
             } catch (Exception e) {
                 System.out.println("Ошибка: " + e.getMessage());
             }
@@ -447,7 +528,8 @@ class CommandRegistry {
                 return;
             }
             System.out.println("\n=== Список назначений ===");
-            System.out.printf("%-20s %-20s %-12s %-10s %-30s%n", "Username", "Роль", "Тип", "Статус", "Назначено");
+            System.out.printf("%-20s %-20s %-12s %-10s %-30s%n",
+                    "Username", "Роль", "Тип", "Статус", "Назначено");
             System.out.println("-".repeat(95));
             for (RoleAssignment a : all) {
                 System.out.printf("%-20s %-20s %-12s %-10s %-30s%n",
@@ -496,7 +578,8 @@ class CommandRegistry {
             } else {
                 System.out.println("Пользователи с ролью " + roleName + ":");
                 for (var a : assignments) {
-                    System.out.println("  - " + a.user().username() + " [" + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
+                    System.out.println("  - " + a.user().username()
+                            + " [" + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
                 }
             }
         });
@@ -508,7 +591,8 @@ class CommandRegistry {
             } else {
                 System.out.println("Активные назначения (" + active.size() + "):");
                 for (var a : active) {
-                    System.out.println("  " + a.user().username() + " -> " + a.role().getName() + " [" + a.assignmentType() + "]");
+                    System.out.println("  " + a.user().username()
+                            + " -> " + a.role().getName() + " [" + a.assignmentType() + "]");
                 }
             }
         });
@@ -520,7 +604,8 @@ class CommandRegistry {
             } else {
                 System.out.println("Истёкшие назначения (" + expired.size() + "):");
                 for (var a : expired) {
-                    System.out.println("  " + a.user().username() + " -> " + a.role().getName());
+                    System.out.println("  " + a.user().username()
+                            + " -> " + a.role().getName());
                 }
             }
         });
@@ -566,7 +651,9 @@ class CommandRegistry {
                 case "4" -> {
                     System.out.print("Статус (1-активное, 2-неактивное): ");
                     String status = scanner.nextLine().trim();
-                    filter = "1".equals(status) ? AssignmentFilters.activeOnly() : AssignmentFilters.inactiveOnly();
+                    filter = "1".equals(status)
+                            ? AssignmentFilters.activeOnly()
+                            : AssignmentFilters.inactiveOnly();
                 }
                 default -> {
                     System.out.println("Неверный выбор.");
@@ -579,7 +666,10 @@ class CommandRegistry {
             } else {
                 System.out.println("Найдено: " + results.size());
                 for (var a : results) {
-                    System.out.println("  " + a.user().username() + " -> " + a.role().getName() + " [" + a.assignmentType() + ", " + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
+                    System.out.println("  " + a.user().username()
+                            + " -> " + a.role().getName()
+                            + " [" + a.assignmentType()
+                            + ", " + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
                 }
             }
         });
@@ -657,6 +747,23 @@ class CommandRegistry {
             if ("да".equalsIgnoreCase(scanner.nextLine().trim())) {
                 System.out.println("До свидания!");
                 System.exit(0);
+            }
+        });
+    }
+
+    private static void registerAuditCommands(CommandParser parser) {
+        parser.registerCommand("audit-log", "Просмотр журнала аудита", (scanner, system) -> {
+            system.getAuditLog().printLog();
+        });
+
+        parser.registerCommand("audit-save", "Сохранить журнал аудита в файл", (scanner, system) -> {
+            System.out.print("Имя файла для сохранения аудита: ");
+            String filename = scanner.nextLine().trim();
+            try {
+                system.getAuditLog().saveToFile(filename);
+                System.out.println("Аудит‑лог сохранён в файл: " + filename);
+            } catch (Exception e) {
+                System.out.println("Ошибка при сохранении: " + e.getMessage());
             }
         });
     }

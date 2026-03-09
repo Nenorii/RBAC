@@ -1,16 +1,16 @@
-import java.time.LocalDateTime;
-
 final class RBACSystem {
 
     private final UserManager userManager;
     private final RoleManager roleManager;
     private final AssignmentManager assignmentManager;
+    private final AuditLog auditLog;
     private String currentUser;
 
     RBACSystem() {
         this.userManager = new UserManager();
         this.roleManager = new RoleManager();
         this.assignmentManager = new AssignmentManager(userManager, roleManager);
+        this.auditLog = new AuditLog();
         roleManager.setRemoveGuard(role ->
                 !assignmentManager.findByRole(role).isEmpty()
         );
@@ -26,6 +26,10 @@ final class RBACSystem {
 
     AssignmentManager getAssignmentManager() {
         return assignmentManager;
+    }
+
+    AuditLog getAuditLog() {
+        return auditLog;
     }
 
     void setCurrentUser(String username) {
@@ -81,6 +85,8 @@ final class RBACSystem {
         assignmentManager.add(pa);
 
         setCurrentUser("admin");
+
+        auditLog.log("SYSTEM_INIT", "system", "-", "Инициализация RBACSystem");
     }
 
     String generateStatistics() {
@@ -95,7 +101,7 @@ final class RBACSystem {
                 : (double) totalAssignments / usersCount;
 
         StringBuilder sb = new StringBuilder();
-        sb.append("=== RBAC Statistics ===\n");
+        sb.append("RBAC Statistics\n");
         sb.append("Users: ").append(usersCount).append("\n");
         sb.append("Roles: ").append(rolesCount).append("\n");
         sb.append("Assignments: ").append(totalAssignments)
