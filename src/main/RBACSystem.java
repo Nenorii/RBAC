@@ -1,4 +1,5 @@
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 final class RBACSystem {
 
@@ -8,6 +9,7 @@ final class RBACSystem {
     private final AuditLog auditLog;
     private final ReportGenerator reportGenerator;
     private final BackgroundExecutor backgroundExecutor;
+    private final ExpiredAssignmentsChecker expiredChecker;
     private String currentUser;
 
     RBACSystem() {
@@ -17,6 +19,7 @@ final class RBACSystem {
         this.auditLog = new AuditLog();
         this.reportGenerator = new ReportGenerator();
         this.backgroundExecutor = new BackgroundExecutor();
+        this.expiredChecker = new ExpiredAssignmentsChecker(assignmentManager, auditLog);
         roleManager.setRemoveGuard(role ->
                 !assignmentManager.findByRole(role).isEmpty()
         );
@@ -44,6 +47,10 @@ final class RBACSystem {
 
     BackgroundExecutor getBackgroundExecutor() {
         return backgroundExecutor;
+    }
+
+    ExpiredAssignmentsChecker getExpiredChecker() {
+        return expiredChecker;
     }
 
     void setCurrentUser(String username) {
@@ -101,6 +108,32 @@ final class RBACSystem {
         setCurrentUser("admin");
 
         auditLog.log("SYSTEM_INIT", "system", "-", "Инициализация RBACSystem");
+
+        startScheduledTasks();
+    }
+
+    private void startScheduledTasks() {
+        backgroundExecutor.scheduleAtFixedRate(() -> {
+            try {
+                int expired = expiredChecker.checkAndMarkExpired();
+                if (expired > 0) {
+                    auditLog.log("SCHEDULER_EXPIRED_CHECK", "scheduler", "system",
+                            "Проверка истекших: найдено=" + expired);
+                }
+            } catch (Exception e) {
+                System.err.println("[SCHEDULER] Ошибка при проверке истекших: " + e.getMessage());
+            }
+        }, 5, 10, TimeUnit.SECONDS);
+
+        backgroundExecutor.scheduleAtFixedRate(() -> {
+            try {
+                String stats = expiredChecker.generateStatisticsReport();
+                System.out.println("[SCHEDULER] " + stats);
+                auditLog.log("SCHEDULER_STATS", "scheduler", "system", stats);
+            } catch (Exception e) {
+                System.err.println("[SCHEDULER] Ошибка при генерации статистики: " + e.getMessage());
+            }
+        }, 15, 30, TimeUnit.SECONDS);
     }
 
     String generateStatistics() {
@@ -122,6 +155,7 @@ final class RBACSystem {
                 .append(" (active=").append(activeAssignments)
                 .append(", expired=").append(expiredAssignments).append(")\n");
         sb.append(String.format("Average roles per user: %.2f%n", avgRolesPerUser));
+        sb.append("Expired processed by scheduler: ").append(expiredChecker.getTotalExpiredProcessed()).append("\n");
 
         var roleToCount = new java.util.HashMap<Role, Integer>();
         for (RoleAssignment a : assignmentManager.findAll()) {

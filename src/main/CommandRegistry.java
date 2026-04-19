@@ -739,6 +739,22 @@ class CommandRegistry {
                 System.exit(0);
             }
         });
+
+        parser.registerCommand("scheduler-status", "Статус планировщика и истекших назначений", (scanner, system) -> {
+            System.out.println("Статус планировщика");
+            System.out.println("Всего отозвано планировщиком: " + system.getExpiredChecker().getTotalExpiredProcessed());
+            System.out.println("Активных задач ExecutorService: " + system.getBackgroundExecutor().getActiveTaskCount());
+            System.out.println("Задач в очереди ScheduledExecutor: " + system.getBackgroundExecutor().getScheduledTaskCount());
+            System.out.println("Очередь аудит-лога: " + system.getAuditLog().getQueueSize());
+        });
+
+        parser.registerCommand("check-expired-now", "Принудительная проверка истекших назначений", (scanner, system) -> {
+            System.out.println("Запуск принудительной проверки истекших назначений...");
+            int expired = system.getExpiredChecker().checkAndMarkExpired();
+            System.out.println("Проверка завершена. Найдено и отозвано истекших: " + expired);
+            system.getAuditLog().log("MANUAL_EXPIRED_CHECK", system.getCurrentUser(), "system",
+                    "Ручная проверка, найдено=" + expired);
+        });
     }
 
     private static void registerAuditCommands(CommandParser parser) {
@@ -904,10 +920,9 @@ class CommandRegistry {
         });
 
         parser.registerCommand("workers-status", "Статус фоновых задач", (scanner, system) -> {
-            System.out.println("=== Статус фоновых задач ===");
+            System.out.println("Статус фоновых задач");
             System.out.println("Активных задач: " + system.getBackgroundExecutor().getActiveTaskCount());
             System.out.println("Очередь аудит-лога: " + system.getAuditLog().getQueueSize() + " записей");
-            System.out.println("=============================");
         });
     }
 }

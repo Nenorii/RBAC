@@ -39,6 +39,10 @@ public class BackgroundExecutor {
         return scheduledExecutorService.scheduleAtFixedRate(task, initialDelay, period, unit);
     }
 
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable task, long initialDelay, long delay, TimeUnit unit) {
+        return scheduledExecutorService.scheduleWithFixedDelay(task, initialDelay, delay, unit);
+    }
+
     public void shutdown() {
         executorService.shutdown();
         scheduledExecutorService.shutdown();
@@ -57,6 +61,13 @@ public class BackgroundExecutor {
     }
 
     public int getActiveTaskCount() {
-        return ((ThreadPoolExecutor) executorService).getActiveCount();
+        if (executorService instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) executorService).getActiveCount();
+        }
+        return 0;
+    }
+
+    public boolean hasScheduledTasks() {
+        return !scheduledExecutorService.isShutdown() && !scheduledExecutorService.isTerminated();
     }
 }

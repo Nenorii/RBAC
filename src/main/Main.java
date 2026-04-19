@@ -15,10 +15,15 @@ class Main {
         }));
 
         try (Scanner scanner = new Scanner(System.in)) {
-            System.out.println(FormatUtils.formatHeader("RBAC Консоль v3.0 (с асинхронными задачами)"));
+            System.out.println(FormatUtils.formatHeader("RBAC Консоль v4.0 (с планировщиком)"));
             System.out.println("Все команды: 'help'");
-            System.out.println("Новые команды: 'report-users-async', 'save-async', 'workers-status'");
-            System.out.println("Выход: 'exit'");
+            System.out.println("Асинхронные команды: 'report-users-async', 'save-async', 'workers-status'");
+            System.out.println("Команды планировщика: 'scheduler-status', 'check-expired-now'");
+            System.out.println("");
+            System.out.println("Периодические задачи:");
+            System.out.println("  - Проверка истекших ролей: каждые 10 секунд");
+            System.out.println("  - Отчёт о статистике: каждые 30 секунд");
+            System.out.println("");
             System.out.println(system.generateStatistics());
             System.out.println();
 
