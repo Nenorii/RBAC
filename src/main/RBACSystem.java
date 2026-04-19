@@ -1,3 +1,5 @@
+import java.util.concurrent.CompletableFuture;
+
 final class RBACSystem {
 
     private final UserManager userManager;
@@ -5,6 +7,7 @@ final class RBACSystem {
     private final AssignmentManager assignmentManager;
     private final AuditLog auditLog;
     private final ReportGenerator reportGenerator;
+    private final BackgroundExecutor backgroundExecutor;
     private String currentUser;
 
     RBACSystem() {
@@ -13,6 +16,7 @@ final class RBACSystem {
         this.assignmentManager = new AssignmentManager(userManager, roleManager);
         this.auditLog = new AuditLog();
         this.reportGenerator = new ReportGenerator();
+        this.backgroundExecutor = new BackgroundExecutor();
         roleManager.setRemoveGuard(role ->
                 !assignmentManager.findByRole(role).isEmpty()
         );
@@ -36,6 +40,10 @@ final class RBACSystem {
 
     ReportGenerator getReportGenerator() {
         return reportGenerator;
+    }
+
+    BackgroundExecutor getBackgroundExecutor() {
+        return backgroundExecutor;
     }
 
     void setCurrentUser(String username) {
@@ -138,5 +146,41 @@ final class RBACSystem {
         }
 
         return sb.toString();
+    }
+
+    public CompletableFuture<Void> saveDataAsync(String filename) {
+        return backgroundExecutor.submit(() -> {
+            auditLog.saveToFile(filename);
+            System.out.println("[ASYNC] Данные сохранены в " + filename + " (поток: " + Thread.currentThread().getName() + ")");
+        });
+    }
+
+    public CompletableFuture<String> generateUserReportAsync() {
+        return backgroundExecutor.submit(() -> {
+            String report = reportGenerator.generateUserReport(userManager, assignmentManager);
+            System.out.println("[ASYNC] Отчёт по пользователям сгенерирован (поток: " + Thread.currentThread().getName() + ")");
+            return report;
+        });
+    }
+
+    public CompletableFuture<String> generatePermissionMatrixAsync() {
+        return backgroundExecutor.submit(() -> {
+            String matrix = reportGenerator.generatePermissionMatrix(userManager, assignmentManager);
+            System.out.println("[ASYNC] Матрица прав сгенерирована (поток: " + Thread.currentThread().getName() + ")");
+            return matrix;
+        });
+    }
+
+    public CompletableFuture<String> generateRoleReportAsync() {
+        return backgroundExecutor.submit(() -> {
+            String report = reportGenerator.generateRoleReport(roleManager, assignmentManager);
+            System.out.println("[ASYNC] Отчёт по ролям сгенерирован (поток: " + Thread.currentThread().getName() + ")");
+            return report;
+        });
+    }
+
+    public void shutdown() {
+        backgroundExecutor.shutdown();
+        auditLog.shutdown();
     }
 }

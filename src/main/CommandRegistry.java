@@ -848,5 +848,66 @@ class CommandRegistry {
                 }
             }
         });
+
+        parser.registerCommand("report-users-async", "Асинхронный отчёт по пользователям (фоновое выполнение)", (scanner, system) -> {
+            System.out.println("Запущена фоновая генерация отчёта...");
+            long startTime = System.currentTimeMillis();
+
+            system.getBackgroundExecutor().submit(() -> {
+                String report = system.getReportGenerator()
+                        .generateUserReport(system.getUserManager(), system.getAssignmentManager());
+                long duration = System.currentTimeMillis() - startTime;
+
+                System.out.println("\n[АСИНХРОННЫЙ ОТЧЁТ] Сгенерирован за " + duration + " мс");
+                System.out.println(report);
+
+                system.getAuditLog().log(
+                        "REPORT_USERS_ASYNC",
+                        system.getCurrentUser(),
+                        "system",
+                        "Асинхронный отчёт, время: " + duration + "ms"
+                );
+            });
+
+            System.out.println("Задача отправлена в фоновый поток. Используйте другие команды, пока отчёт генерируется.");
+        });
+
+        parser.registerCommand("save-async", "Асинхронное сохранение данных в файл", (scanner, system) -> {
+            String filename = ConsoleUtils.promptString(scanner, "Имя файла для сохранения", true);
+
+            System.out.println("Запущено фоновое сохранение в " + filename + "...");
+
+            system.getBackgroundExecutor().submit(() -> {
+                try {
+                    system.getAuditLog().saveToFile(filename);
+                    System.out.println("[ASYNC] Данные успешно сохранены в " + filename +
+                            " (поток: " + Thread.currentThread().getName() + ")");
+
+                    system.getAuditLog().log(
+                            "SAVE_ASYNC",
+                            system.getCurrentUser(),
+                            filename,
+                            "Асинхронное сохранение выполнено"
+                    );
+                } catch (Exception e) {
+                    System.err.println("[ASYNC] Ошибка при сохранении: " + e.getMessage());
+                    system.getAuditLog().log(
+                            "SAVE_ASYNC_ERROR",
+                            system.getCurrentUser(),
+                            filename,
+                            "Ошибка: " + e.getMessage()
+                    );
+                }
+            });
+
+            System.out.println("Задача сохранения отправлена в фоновый поток.");
+        });
+
+        parser.registerCommand("workers-status", "Статус фоновых задач", (scanner, system) -> {
+            System.out.println("=== Статус фоновых задач ===");
+            System.out.println("Активных задач: " + system.getBackgroundExecutor().getActiveTaskCount());
+            System.out.println("Очередь аудит-лога: " + system.getAuditLog().getQueueSize() + " записей");
+            System.out.println("=============================");
+        });
     }
 }
