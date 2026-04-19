@@ -15,7 +15,7 @@ class Main {
         }));
 
         try (Scanner scanner = new Scanner(System.in)) {
-            System.out.println(FormatUtils.formatHeader("RBAC Консоль v4.0 (с планировщиком)"));
+            System.out.println(FormatUtils.formatHeader("RBAC Консоль"));
             System.out.println("Все команды: 'help'");
             System.out.println("Асинхронные команды: 'report-users-async', 'save-async', 'workers-status'");
             System.out.println("Команды планировщика: 'scheduler-status', 'check-expired-now'");

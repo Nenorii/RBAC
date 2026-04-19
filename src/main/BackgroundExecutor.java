@@ -3,7 +3,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class BackgroundExecutor {
     private final ExecutorService executorService;
-    private final ScheduledExecutorService scheduledExecutorService;
+    private final ScheduledThreadPoolExecutor scheduledExecutorService;  // Изменён тип
     private final AtomicLong taskCounter = new AtomicLong(0);
 
     public BackgroundExecutor() {
@@ -13,7 +13,7 @@ public class BackgroundExecutor {
             t.setDaemon(true);
             return t;
         });
-        this.scheduledExecutorService = Executors.newScheduledThreadPool(2, r -> {
+        this.scheduledExecutorService = new ScheduledThreadPoolExecutor(2, r -> {  // Изменено
             Thread t = new Thread(r);
             t.setName("rbac-scheduler-" + taskCounter.incrementAndGet());
             t.setDaemon(true);
@@ -69,5 +69,9 @@ public class BackgroundExecutor {
 
     public boolean hasScheduledTasks() {
         return !scheduledExecutorService.isShutdown() && !scheduledExecutorService.isTerminated();
+    }
+
+    public int getScheduledTaskCount() {
+        return scheduledExecutorService.getQueue().size();
     }
 }
