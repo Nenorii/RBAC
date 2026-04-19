@@ -1,14 +1,16 @@
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 final class RoleManager implements Repository<Role> {
 
-    private final Map<String, Role> byId = new TreeMap<>();
-    private final Map<String, Role> byName = new TreeMap<>();
+    private final ConcurrentMap<String, Role> byId = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Role> byName = new ConcurrentHashMap<>();
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private java.util.function.Predicate<Role> removeGuard;
 
@@ -19,50 +21,94 @@ final class RoleManager implements Repository<Role> {
     @Override
     public void add(Role item) {
         if (item == null) throw new IllegalArgumentException("Role не может быть null");
-        if (byName.containsKey(item.getName()))
-            throw new IllegalArgumentException("Роль с именем '" + item.getName() + "' уже существует");
-        byId.put(item.getId(), item);
-        byName.put(item.getName(), item);
+
+        lock.writeLock().lock();
+        try {
+            if (byName.containsKey(item.getName()))
+                throw new IllegalArgumentException("Роль с именем '" + item.getName() + "' уже существует");
+            byId.put(item.getId(), item);
+            byName.put(item.getName(), item);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public boolean remove(Role item) {
         if (item == null) return false;
-        if (removeGuard != null && removeGuard.test(item))
-            throw new IllegalStateException("Роль '" + item.getName() + "' назначена пользователям");
-        var r = byId.remove(item.getId());
-        if (r != null) byName.remove(r.getName());
-        return r != null;
+
+        lock.writeLock().lock();
+        try {
+            if (removeGuard != null && removeGuard.test(item))
+                throw new IllegalStateException("Роль '" + item.getName() + "' назначена пользователям");
+            var r = byId.remove(item.getId());
+            if (r != null) byName.remove(r.getName());
+            return r != null;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public Optional<Role> findById(String id) {
-        return Optional.ofNullable(byId.get(id));
+        lock.readLock().lock();
+        try {
+            return Optional.ofNullable(byId.get(id));
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public List<Role> findAll() {
-        return new ArrayList<>(byId.values());
+        lock.readLock().lock();
+        try {
+            return new ArrayList<>(byId.values());
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public int count() {
-        return byId.size();
+        lock.readLock().lock();
+        try {
+            return byId.size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void clear() {
-        byId.clear();
-        byName.clear();
+        lock.writeLock().lock();
+        try {
+            byId.clear();
+            byName.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     Optional<Role> findByName(String name) {
-        return Optional.ofNullable(byName.get(name));
+        lock.readLock().lock();
+        try {
+            return Optional.ofNullable(byName.get(name));
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     List<Role> findByFilter(RoleFilter filter) {
         if (filter == null) return findAll();
-        return byId.values().stream().filter(filter::test).toList();
+        lock.readLock().lock();
+        try {
+            return byId.values().stream()
+                    .filter(filter::test)
+                    .toList();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     List<Role> findAll(RoleFilter filter, Comparator<Role> sorter) {
@@ -71,17 +117,35 @@ final class RoleManager implements Repository<Role> {
     }
 
     boolean exists(String name) {
-        return name != null && byName.containsKey(name);
+        if (name == null) return false;
+        lock.readLock().lock();
+        try {
+            return byName.containsKey(name);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     void addPermissionToRole(String roleName, Permission permission) {
-        var role = findByName(roleName).orElseThrow(() -> new IllegalArgumentException("Роль '" + roleName + "' не найдена"));
-        role.addPermission(permission);
+        lock.writeLock().lock();
+        try {
+            var role = findByName(roleName).orElseThrow(() ->
+                    new IllegalArgumentException("Роль '" + roleName + "' не найдена"));
+            role.addPermission(permission);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     void removePermissionFromRole(String roleName, Permission permission) {
-        var role = findByName(roleName).orElseThrow(() -> new IllegalArgumentException("Роль '" + roleName + "' не найдена"));
-        role.removePermission(permission);
+        lock.writeLock().lock();
+        try {
+            var role = findByName(roleName).orElseThrow(() ->
+                    new IllegalArgumentException("Роль '" + roleName + "' не найдена"));
+            role.removePermission(permission);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     List<Role> findRolesWithPermission(String permissionName, String resource) {

@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AuditLog {
 
@@ -14,7 +15,7 @@ public class AuditLog {
             String details
     ) {}
 
-    private final List<AuditEntry> entries = new ArrayList<>();
+    private final List<AuditEntry> entries = new CopyOnWriteArrayList<>();
 
     public void log(String timestamp, String action, String performer, String target, String details) {
         entries.add(new AuditEntry(timestamp, action, performer, target, details));
@@ -31,24 +32,16 @@ public class AuditLog {
 
     public List<AuditEntry> getByPerformer(String performer) {
         if (performer == null) return List.of();
-        List<AuditEntry> result = new ArrayList<>();
-        for (AuditEntry e : entries) {
-            if (performer.equals(e.performer())) {
-                result.add(e);
-            }
-        }
-        return result;
+        return entries.stream()
+                .filter(e -> performer.equals(e.performer()))
+                .toList();
     }
 
     public List<AuditEntry> getByAction(String action) {
         if (action == null) return List.of();
-        List<AuditEntry> result = new ArrayList<>();
-        for (AuditEntry e : entries) {
-            if (action.equals(e.action())) {
-                result.add(e);
-            }
-        }
-        return result;
+        return entries.stream()
+                .filter(e -> action.equals(e.action()))
+                .toList();
     }
 
     public void printLog() {
