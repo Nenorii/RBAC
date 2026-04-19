@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 final class AssignmentManager implements Repository<RoleAssignment> {
 
@@ -194,6 +195,18 @@ final class AssignmentManager implements Repository<RoleAssignment> {
             temp.extend(newExpiry);
         } finally {
             lock.writeLock().unlock();
+        }
+    }
+
+    List<RoleAssignment> findByFilterParallel(AssignmentFilter filter) {
+        if (filter == null) return findAll();
+        lock.readLock().lock();
+        try {
+            return storage.values().parallelStream()
+                    .filter(filter::test)
+                    .collect(Collectors.toList());
+        } finally {
+            lock.readLock().unlock();
         }
     }
 }

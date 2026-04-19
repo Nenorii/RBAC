@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 final class UserManager implements Repository<User> {
 
@@ -134,4 +135,17 @@ final class UserManager implements Repository<User> {
             lock.writeLock().unlock();
         }
     }
+
+    List<User> findByFilterParallel(UserFilter filter) {
+        if (filter == null) return findAll();
+        lock.readLock().lock();
+        try {
+            return storage.values().parallelStream()
+                    .filter(filter::test)
+                    .collect(Collectors.toList());
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
 }

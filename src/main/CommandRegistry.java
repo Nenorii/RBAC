@@ -131,13 +131,19 @@ class CommandRegistry {
             );
         });
 
-        parser.registerCommand("user-search", "Поиск пользователей по фильтрам", (scanner, system) -> {
+        parser.registerCommand("user-search", "Поиск пользователей по фильтрам (1=обычный, 2=параллельный)", (scanner, system) -> {
+            System.out.println("Выберите режим:");
+            System.out.println("1. Обычный поиск");
+            System.out.println("2. Параллельный поиск (parallelStream)");
+            int mode = ConsoleUtils.promptInt(scanner, "Режим", 1, 2);
+
             System.out.println("Выберите фильтр:");
             System.out.println("1. По username (содержит)");
             System.out.println("2. По email (содержит)");
             System.out.println("3. По домену email");
             System.out.println("4. По полному имени (содержит)");
             int choice = ConsoleUtils.promptInt(scanner, "Выбор", 1, 4);
+
             UserFilter filter;
             switch (choice) {
                 case 1 -> {
@@ -161,15 +167,33 @@ class CommandRegistry {
                     return;
                 }
             }
-            var results = system.getUserManager().findByFilter(filter);
+
+            long startTime = System.currentTimeMillis();
+            List<User> results;
+            if (mode == 2) {
+                results = system.getUserManager().findByFilterParallel(filter);
+                System.out.println("Использован параллельный поиск");
+            } else {
+                results = system.getUserManager().findByFilter(filter);
+                System.out.println("Использован обычный поиск");
+            }
+            long endTime = System.currentTimeMillis();
+
             if (results.isEmpty()) {
                 System.out.println("Ничего не найдено.");
             } else {
-                System.out.println("Найдено: " + results.size());
+                System.out.println("Найдено: " + results.size() + " (за " + (endTime - startTime) + " мс)");
                 for (User u : results) {
                     System.out.println("  " + u.format());
                 }
             }
+
+            system.getAuditLog().log(
+                    "USER_SEARCH",
+                    system.getCurrentUser(),
+                    "filter=" + choice,
+                    "mode=" + (mode == 2 ? "parallel" : "sequential") + ", found=" + results.size()
+            );
         });
     }
 
@@ -321,12 +345,18 @@ class CommandRegistry {
             );
         });
 
-        parser.registerCommand("role-search", "Поиск ролей", (scanner, system) -> {
+        parser.registerCommand("role-search", "Поиск ролей (1=обычный, 2=параллельный)", (scanner, system) -> {
+            System.out.println("Выберите режим:");
+            System.out.println("1. Обычный поиск");
+            System.out.println("2. Параллельный поиск (parallelStream)");
+            int mode = ConsoleUtils.promptInt(scanner, "Режим", 1, 2);
+
             System.out.println("Поиск ролей:");
             System.out.println("1. По имени (содержит)");
             System.out.println("2. По наличию конкретного права");
             System.out.println("3. По минимальному количеству прав");
             int choice = ConsoleUtils.promptInt(scanner, "Выбор", 1, 3);
+
             RoleFilter filter;
             switch (choice) {
                 case 1 -> {
@@ -347,15 +377,33 @@ class CommandRegistry {
                     return;
                 }
             }
-            var results = system.getRoleManager().findByFilter(filter);
+
+            long startTime = System.currentTimeMillis();
+            List<Role> results;
+            if (mode == 2) {
+                results = system.getRoleManager().findByFilterParallel(filter);
+                System.out.println("Использован параллельный поиск");
+            } else {
+                results = system.getRoleManager().findByFilter(filter);
+                System.out.println("Использован обычный поиск");
+            }
+            long endTime = System.currentTimeMillis();
+
             if (results.isEmpty()) {
                 System.out.println("Ничего не найдено.");
             } else {
-                System.out.println("Найдено: " + results.size());
+                System.out.println("Найдено: " + results.size() + " (за " + (endTime - startTime) + " мс)");
                 for (Role r : results) {
                     System.out.println("  " + r.getName() + " (" + r.getPermissions().size() + " прав)");
                 }
             }
+
+            system.getAuditLog().log(
+                    "ROLE_SEARCH",
+                    system.getCurrentUser(),
+                    "filter=" + choice,
+                    "mode=" + (mode == 2 ? "parallel" : "sequential") + ", found=" + results.size()
+            );
         });
     }
 
@@ -547,13 +595,19 @@ class CommandRegistry {
         });
 
 
-        parser.registerCommand("assignment-search", "Поиск назначений по фильтрам", (scanner, system) -> {
+        parser.registerCommand("assignment-search", "Поиск назначений (1=обычный, 2=параллельный)", (scanner, system) -> {
+            System.out.println("Выберите режим:");
+            System.out.println("1. Обычный поиск");
+            System.out.println("2. Параллельный поиск (parallelStream)");
+            int mode = ConsoleUtils.promptInt(scanner, "Режим", 1, 2);
+
             System.out.println("Фильтры:");
             System.out.println("1. По пользователю");
             System.out.println("2. По роли");
             System.out.println("3. По типу (постоянное/временное)");
             System.out.println("4. По статусу (активное/неактивное)");
             int choice = ConsoleUtils.promptInt(scanner, "Выбор", 1, 4);
+
             AssignmentFilter filter;
             switch (choice) {
                 case 1 -> {
@@ -577,16 +631,34 @@ class CommandRegistry {
                     return;
                 }
             }
-            var results = system.getAssignmentManager().findByFilter(filter);
+
+            long startTime = System.currentTimeMillis();
+            List<RoleAssignment> results;
+            if (mode == 2) {
+                results = system.getAssignmentManager().findByFilterParallel(filter);
+                System.out.println("Использован параллельный поиск");
+            } else {
+                results = system.getAssignmentManager().findByFilter(filter);
+                System.out.println("Использован обычный поиск");
+            }
+            long endTime = System.currentTimeMillis();
+
             if (results.isEmpty()) {
                 System.out.println("Ничего не найдено.");
             } else {
-                System.out.println("Найдено: " + results.size());
+                System.out.println("Найдено: " + results.size() + " (за " + (endTime - startTime) + " мс)");
                 for (var a : results) {
                     System.out.println("  " + a.user().username() + " -> " + a.role().getName()
                             + " [" + a.assignmentType() + ", " + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]");
                 }
             }
+
+            system.getAuditLog().log(
+                    "ASSIGNMENT_SEARCH",
+                    system.getCurrentUser(),
+                    "filter=" + choice,
+                    "mode=" + (mode == 2 ? "parallel" : "sequential") + ", found=" + results.size()
+            );
         });
     }
 
@@ -720,6 +792,52 @@ class CommandRegistry {
             String report = system.getReportGenerator()
                     .generatePermissionMatrix(system.getUserManager(), system.getAssignmentManager());
             System.out.println(report);
+            if (ConsoleUtils.promptYesNo(scanner, "Сохранить отчёт в файл?")) {
+                String filename = ConsoleUtils.promptString(scanner, "Имя файла", true);
+                try {
+                    system.getReportGenerator().exportToFile(report, filename);
+                    System.out.println("Отчёт сохранён в " + filename);
+                } catch (Exception e) {
+                    System.out.println("Ошибка сохранения: " + e.getMessage());
+                }
+            }
+        });
+
+        parser.registerCommand("report-users-parallel", "Отчёт по пользователям (параллельная обработка)", (scanner, system) -> {
+            String report = system.getReportGenerator()
+                    .generateUserReportParallel(system.getUserManager(), system.getAssignmentManager());
+            System.out.println(report);
+
+            system.getAuditLog().log(
+                    "REPORT_USERS_PARALLEL",
+                    system.getCurrentUser(),
+                    "system",
+                    "Сгенерирован параллельный отчёт пользователей"
+            );
+
+            if (ConsoleUtils.promptYesNo(scanner, "Сохранить отчёт в файл?")) {
+                String filename = ConsoleUtils.promptString(scanner, "Имя файла", true);
+                try {
+                    system.getReportGenerator().exportToFile(report, filename);
+                    System.out.println("Отчёт сохранён в " + filename);
+                } catch (Exception e) {
+                    System.out.println("Ошибка сохранения: " + e.getMessage());
+                }
+            }
+        });
+
+        parser.registerCommand("report-matrix-parallel", "Матрица прав (параллельная обработка)", (scanner, system) -> {
+            String report = system.getReportGenerator()
+                    .generatePermissionMatrixParallel(system.getUserManager(), system.getAssignmentManager());
+            System.out.println(report);
+
+            system.getAuditLog().log(
+                    "REPORT_MATRIX_PARALLEL",
+                    system.getCurrentUser(),
+                    "system",
+                    "Сгенерирована параллельная матрица прав"
+            );
+
             if (ConsoleUtils.promptYesNo(scanner, "Сохранить отчёт в файл?")) {
                 String filename = ConsoleUtils.promptString(scanner, "Имя файла", true);
                 try {

@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 final class RoleManager implements Repository<Role> {
 
@@ -150,5 +151,17 @@ final class RoleManager implements Repository<Role> {
 
     List<Role> findRolesWithPermission(String permissionName, String resource) {
         return findByFilter(RoleFilters.hasPermission(permissionName, resource));
+    }
+
+    List<Role> findByFilterParallel(RoleFilter filter) {
+        if (filter == null) return findAll();
+        lock.readLock().lock();
+        try {
+            return byId.values().parallelStream()
+                    .filter(filter::test)
+                    .collect(Collectors.toList());
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 }
